@@ -18,7 +18,7 @@ float d1, d2;
 unsigned long tiempoRadar; //Temporizador del servo
 
 #define DHTPIN 2
-#define DHTTYPE DHT11
+#define DHTTYPE DHT22
 unsigned long tiempoAmb; //Temporizador de ambiente
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -64,16 +64,14 @@ void loop() {
     
     digitalWrite(Trig2, LOW);
     digitalWrite(Trig2, HIGH);
-    unsigned long tiempo2 = pulseIn(Echo1, HIGH);
+    unsigned long tiempo2 = pulseIn(Echo2, HIGH);
     d2 = tiempo2 * 0.000001 * VelSon / 2; //Fórmula para calcular la distancia en cm
     Serial.print("dist ");
     Serial.print(d1);
     Serial.print(" ");
     Serial.print(inc);
     Serial.print(" ");
-    Serial.print(d2);
-    Serial.print(" ");
-    Serial.println(inc+180);
+    Serial.println(d2);
     inc=inc+10*cambio; //Cambiamos la inclinación en 10 grados en el sentido que nos indique el cambio
     tiempoRadar=millis()+100;
   }
