@@ -48,7 +48,7 @@ void loop() {
       if (i % stepsPer30Degrees == 0) { 
         long distance = measureDistance(); // Medir la distancia
         mySerial.print("G (h): ");
-        Serial.println(i * degreesPerStep);
+        mySerial.print(i * degreesPerStep);
         mySerial.print(" | D: ");
         mySerial.print(distance);
         mySerial.println(" cm");
@@ -73,7 +73,7 @@ void loop() {
       if (i % stepsPer30Degrees == 0) { 
         long distance = measureDistance(); // Medir la distancia
         mySerial.print("G (antih): ");
-        Serial.println(360 - (i * degreesPerStep)); // Imprime los grados restantes hacia atrás
+        mySerial.print(360 - (i * degreesPerStep)); // Imprime los grados restantes hacia atrás
         mySerial.print(" | D: ");
         mySerial.print(distance);
         mySerial.println(" cm");
