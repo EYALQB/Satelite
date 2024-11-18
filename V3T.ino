@@ -41,20 +41,17 @@ void setup() {
   servoMotor.attach(9);
   servoMotor.write(0);
 }
-void ambiente(){
+  
+void loop() {
+  //Ambiente
+  if (millis()>=tiempoAmb){
   float h = dht.readHumidity();
   float t = dht.readTemperature();
   Serial.print("Amb ");
   Serial.print(t);
   Serial.print(" ");
   Serial.println(h);
-}
-  
-void loop() {
-  //Ambiente
-  if (millis()>=tiempoAmb){
-    ambiente();
-    tiempoAmb=millis()+1000;
+  tiempoAmb=millis()+1000;
   }
   //Servo
   if (millis()>=tiempoDist){
