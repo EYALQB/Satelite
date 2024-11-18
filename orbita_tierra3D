@@ -1,0 +1,125 @@
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+from matplotlib import image
+import re
+import serial
+import sys
+
+# Constantes
+R_EARTH = 6371000  # Radio de la Tierra en metros
+
+# Carga la textura de la Tierra
+earth_texture = image.imread("descarga.jpg")  # Ruta a tu imagen de textura
+
+# Normaliza la textura si está en formato 0-255
+if earth_texture.max() > 1:
+    earth_texture = earth_texture / 255.0
+
+# Crea la esfera 3D para la Tierra
+phi, theta = np.mgrid[0:np.pi:200j, 0:2 * np.pi:200j]  # Divisiones de la esfera
+x = np.sin(phi) * np.cos(theta) * R_EARTH  # Coordenada X
+y = np.sin(phi) * np.sin(theta) * R_EARTH  # Coordenada Y
+z = np.cos(phi) * R_EARTH                  # Coordenada Z
+
+# Mapea la textura sobre la esfera
+u = theta / (2 * np.pi)  # Coordenadas U normalizadas [0, 1]
+v = phi / np.pi          # Coordenadas V normalizadas [0, 1]
+rows, cols, _ = earth_texture.shape
+u_idx = (u * (cols - 1)).astype(int)
+v_idx = (v * (rows - 1)).astype(int)
+face_colors = earth_texture[v_idx, u_idx]
+
+# Regex para extraer las coordenadas del satélite
+regex = re.compile(r"Position: \(X: ([\d\.-]+) m, Y: ([\d\.-]+) m, Z: ([\d\.-]+) m\)")
+
+# Inicializa las listas para almacenar las posiciones del satélite
+satellite_x = []
+satellite_y = []
+satellite_z = []
+
+# Configura la gráfica
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+plt.ion()  # Modo interactivo
+
+# Dibuja la Tierra con textura
+ax.plot_surface(
+    x, y, z, rstride=1, cstride=1, facecolors=face_colors,
+    linewidth=0, antialiased=False, zorder=1)
+
+# Configuración inicial del gráfico
+satellite_plot, = ax.plot([], [], [], 'bo-', label='Órbita', markersize=2, zorder=2)
+last_point = ax.scatter([], [], [], color='red', s=50, label='Posición actual', zorder=3)
+
+# Ajusta la vista
+ax.set_box_aspect([1, 1, 1])  # Esfera simétrica
+ax.set_xlim(-1.5 * R_EARTH, 1.5 * R_EARTH)
+ax.set_ylim(-1.5 * R_EARTH, 1.5 * R_EARTH)
+ax.set_zlim(-1.5 * R_EARTH, 1.5 * R_EARTH)
+ax.set_xlabel("X (m)")
+ax.set_ylabel("Y (m)")
+ax.set_zlabel("Z (m)")
+ax.set_title("Seguimiento del Satélite")
+ax.legend()
+
+# Flag para detectar cierre de ventana
+window_closed = False
+
+
+def on_close(event):
+    global window_closed
+    print("Cerrando ventana...")
+    window_closed = True
+    plt.close('all')
+    sys.exit(0)
+
+
+fig.canvas.mpl_connect('close_event', on_close)
+
+# Configura la conexión serial
+ser = serial.Serial('COM3', 9600, timeout=1)
+
+# Bucle principal
+while not window_closed:
+    if ser.in_waiting <= 0:
+        continue
+
+    line = ser.readline().decode('utf-8').rstrip()
+
+    # Busca las coordenadas del satélite
+    match = regex.search(line)
+    if match:
+        x = float(match.group(1))
+        y = float(match.group(2))
+        z = float(match.group(3))
+        print(f"X: {x}, Y: {y}, Z: {z}")
+
+        # Almacena las posiciones
+        satellite_x.append(x)
+        satellite_y.append(y)
+        satellite_z.append(z)
+
+        # Actualiza la órbita del satélite
+        satellite_plot.set_data(satellite_x, satellite_y)
+        satellite_plot.set_3d_properties(satellite_z)
+
+        # Actualiza la posición actual del satélite
+        last_point._offsets3d = ([satellite_x[-1]], [satellite_y[-1]], [satellite_z[-1]])
+
+        # Ajusta los límites si es necesario
+        max_range = 1.1 * max(
+            np.abs(satellite_x).max(),
+            np.abs(satellite_y).max(),
+            np.abs(satellite_z).max(),
+            R_EARTH
+        )
+        ax.set_xlim(-max_range, max_range)
+        ax.set_ylim(-max_range, max_range)
+        ax.set_zlim(-max_range, max_range)
+
+    plt.draw()
+    plt.pause(0.01)  # Da tiempo al sistema para refrescar la gráfica
+
+plt.ioff()
+plt.show()
