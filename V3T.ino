@@ -47,10 +47,6 @@ void ambiente(){
   Serial.print("Amb ");
   Serial.print(t);
   Serial.print(" ");
-  Serial.print(h);
-  Serial.print(" ");
-  Serial.print(h);
-  Serial.print(" ");
   Serial.println(h);
 }
   
