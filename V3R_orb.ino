@@ -53,10 +53,11 @@ void loop() {
       }
     }
     if (tipo == "Orb") {
+      int idxTime = data.indexOf("Time: ");
       int idxX = data.indexOf("X:");
       int idxY = data.indexOf("Y:");
       int idxZ = data.indexOf("Z:");
-      if (idxX == -1 || idxY == -1 || idxZ == -1) {
+      if (idxTime != -1 && idxX != -1 && idxY != -1 && idxZ != -1) {
         Serial.println("Error Orb");
         digitalWrite(yellow, HIGH);
         Ty = millis() + 100;
