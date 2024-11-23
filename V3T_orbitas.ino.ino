@@ -133,6 +133,7 @@ void simulate_orbit(unsigned long millis, double inclination, int ecef) {
   }
 
 // Send the data to the serial port
+  mySerial.print("Orb");
   mySerial.print("Time: ");
   mySerial.print(time);
   mySerial.print(" s | Pos: (X: ");
